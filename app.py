@@ -14,34 +14,49 @@ st.set_page_config(
     page_icon="📈",
     layout="wide"
 )
+
+# =============================
+# LOGO
+# =============================
 st.image("logo.jpg")
-st.title("📈 TRỰC QUAN HOÁ GIÁ CỔ PHIẾU VÀ KIỂM ĐỊNH MANN-KENDALL_TS. VŨ ĐỨC BÌNH")
-# =============================
-# SIDEBAR
-# =============================
 
-st.sidebar.header("Thông tin đầu vào")
+# =============================
+# TIÊU ĐỀ
+# =============================
+st.title("📈 TRỰC QUAN HÓA GIÁ CỔ PHIẾU VÀ KIỂM ĐỊNH MANN-KENDALL")
+st.subheader("TS. VŨ ĐỨC BÌNH")
 
-ticker = st.sidebar.text_input(
+st.markdown("---")
+
+# =============================
+# THÔNG TIN ĐẦU VÀO (DẠNG DỌC)
+# =============================
+st.header("📋 Thông tin đầu vào")
+
+ticker = st.text_input(
     "Mã cổ phiếu",
-    "VCB.VN"
+    value="VCB.VN"
 )
 
-start_date = st.sidebar.date_input(
+start_date = st.date_input(
     "Ngày bắt đầu",
-    pd.to_datetime("2026-01-01")
+    value=pd.to_datetime("2026-01-01")
 )
 
-end_date = st.sidebar.date_input(
+end_date = st.date_input(
     "Ngày kết thúc",
-    pd.to_datetime("2026-06-27")
+    value=pd.to_datetime("2026-06-27")
+)
+
+run = st.button(
+    "📈 Phân tích",
+    use_container_width=True
 )
 
 # =============================
-# NÚT CHẠY
+# CHẠY PHÂN TÍCH
 # =============================
-
-if st.sidebar.button("Phân tích"):
+if run:
 
     with st.spinner("Đang tải dữ liệu..."):
 
@@ -59,7 +74,6 @@ if st.sidebar.button("Phân tích"):
     # =============================
     # XỬ LÝ DỮ LIỆU
     # =============================
-
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.droplevel("Ticker")
 
@@ -80,23 +94,21 @@ if st.sidebar.button("Phân tích"):
     )
 
     # =============================
-    # DỮ LIỆU
+    # HIỂN THỊ DỮ LIỆU
     # =============================
-
-    st.subheader("Dữ liệu")
+    st.subheader("📄 Dữ liệu")
 
     st.dataframe(df)
 
     # =============================
-    # GIÁ ĐÓNG CỬA + LOG RETURN
+    # BIỂU ĐỒ GIÁ & LOG RETURN
     # =============================
-
-    st.subheader("Giá đóng cửa và Log Return")
+    st.subheader("📈 Giá đóng cửa và Log Return")
 
     fig, ax = plt.subplots(
         2,
         1,
-        figsize=(10,8),
+        figsize=(10, 8),
         sharex=True
     )
 
@@ -134,17 +146,16 @@ if st.sidebar.button("Phân tích"):
     # =============================
     # BIỂU ĐỒ NẾN
     # =============================
+    st.subheader("🕯️ Biểu đồ nến")
 
-    st.subheader("Biểu đồ nến")
-
-    fig2, axlist = mpf.plot(
+    fig2, _ = mpf.plot(
         df,
         type="candle",
-        mav=(10,20),
+        mav=(10, 20),
         volume=True,
         style="yahoo",
-        figsize=(12,6),
-        title=f"{ticker}",
+        figsize=(12, 6),
+        title=ticker,
         returnfig=True
     )
 
@@ -153,63 +164,30 @@ if st.sidebar.button("Phân tích"):
     # =============================
     # KIỂM ĐỊNH MANN-KENDALL
     # =============================
-
     close_prices = df["Close"].dropna().reset_index(drop=True)
 
     result = mk.original_test(close_prices)
 
-    st.subheader("Kết quả kiểm định Mann-Kendall")
+    st.subheader("📊 Kết quả kiểm định Mann-Kendall")
 
     col1, col2 = st.columns(2)
 
     with col1:
-
-        st.metric(
-            "Trend",
-            result.trend
-        )
-
-        st.metric(
-            "Tau",
-            round(result.Tau,4)
-        )
+        st.metric("Trend", result.trend)
+        st.metric("Tau", f"{result.Tau:.4f}")
 
     with col2:
-
-        st.metric(
-            "p-value",
-            round(result.p,6)
-        )
-
-        st.metric(
-            "Variance S",
-            round(result.var_s,2)
-        )
+        st.metric("p-value", f"{result.p:.6f}")
+        st.metric("Variance S", f"{result.var_s:.2f}")
 
     st.markdown("---")
 
     if result.p < 0.05:
-
         if result.trend == "increasing":
-
-            st.success(
-                "Có xu hướng TĂNG có ý nghĩa thống kê (p < 0.05)."
-            )
-
+            st.success("Có xu hướng **TĂNG** có ý nghĩa thống kê (p < 0.05).")
         elif result.trend == "decreasing":
-
-            st.success(
-                "Có xu hướng GIẢM có ý nghĩa thống kê (p < 0.05)."
-            )
-
+            st.success("Có xu hướng **GIẢM** có ý nghĩa thống kê (p < 0.05).")
         else:
-
-            st.success(
-                "Có xu hướng đáng kể về mặt thống kê."
-            )
-
+            st.success("Có xu hướng đáng kể về mặt thống kê.")
     else:
-
-        st.warning(
-            "Không phát hiện xu hướng có ý nghĩa thống kê."
-        )
+        st.warning("Không phát hiện xu hướng có ý nghĩa thống kê (p ≥ 0.05).")
