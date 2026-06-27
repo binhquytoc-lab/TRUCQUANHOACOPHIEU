@@ -14,9 +14,8 @@ st.set_page_config(
     page_icon="📈",
     layout="wide"
 )
-
-st.title("📈 PHÂN TÍCH GIÁ CỔ PHIẾU VÀ KIỂM ĐỊNH MANN-KENDALL")
 st.image("logo.jpg")
+st.title("📈 PHÂN TÍCH GIÁ CỔ PHIẾU VÀ KIỂM ĐỊNH MANN-KENDALL")
 # =============================
 # SIDEBAR
 # =============================
